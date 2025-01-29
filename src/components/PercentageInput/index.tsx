@@ -40,12 +40,26 @@ const PercentageInput: FC<PercentageInputProps> = ({
     [max, onChange]
   );
 
+  // Функция для округления ввода в зависимости от шага
+  const roundToStep = (value: number, step: number) => {
+    return Math.round(value / step) * step;
+  };
+
   const handleInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
 
-      // Проверяем, что введённое значение соответствует формату числа
+      // Разрешаем точку, если она в конце строки
       if (value === "" || /^\d*\.?\d*$/.test(value)) {
+        const dotCount = value.split(".").length - 1;
+
+        // Если точка в конце строки и вводятся цифры, разрешаем их
+        if (dotCount === 1 && value[value.length - 1] === ".") {
+          setInputValue(value); // Просто обновляем inputValue без изменений
+          return;
+        }
+
+        // Преобразуем строку в число, если точка не в конце
         const numericValue = parseFloat(value);
 
         // Если значение некорректное (NaN), устанавливаем min
@@ -69,12 +83,15 @@ const PercentageInput: FC<PercentageInputProps> = ({
           return;
         }
 
+        // Округляем значение в зависимости от шага
+        const roundedValue = roundToStep(numericValue, step);
+
         // Если значение корректное, обновляем состояние
-        onChange(numericValue);
-        setInputValue(value);
+        onChange(roundedValue);
+        setInputValue(roundedValue.toString());
       }
     },
-    [min, max, onChange]
+    [min, max, step, onChange]
   );
 
   const calculateWidth = useCallback(
